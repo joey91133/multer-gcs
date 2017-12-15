@@ -17,27 +17,28 @@ function preProcess(req, file, cb) {
   cb(null, '');
 }
 
-function getMimeType(req, file) {
-  const newFile = file;
-  return new Promise(((resolve, reject) => {
-    peek(file.stream, 4100, (err, data, outStream) => {
-      if (err) reject(err);
-
-      const inspectData = fileTypeCheck(data);
-
-      if (inspectData) {
-        newFile.originalMimetype = file.mimetype;
-        newFile.extension = inspectData.ext;
-        newFile.mimetype = inspectData.mime;
-        newFile.outStream = outStream;
-      }
-
-      resolve(newFile);
-    });
-  }));
-}
-
 function GCStorage(opts) {
+
+  this.getMimeType = function(req, file) {
+    const newFile = file;
+    return new Promise(((resolve, reject) => {
+      peek(file.stream, 4100, (err, data, outStream) => {
+        if (err) reject(err);
+
+        const inspectData = fileTypeCheck(data);
+
+        if (inspectData) {
+          newFile.originalMimetype = file.mimetype;
+          newFile.extension = inspectData.ext;
+          newFile.mimetype = inspectData.mime;
+          newFile.outStream = outStream;
+        }
+
+        resolve(newFile);
+      });
+    }));
+  }
+
   this.getFilename = (opts.filename || getFilename);
 
   if (typeof opts.destination === 'string') {
