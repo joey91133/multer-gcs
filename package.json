@@ -15,7 +15,7 @@
   "author": "jahmed76",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/jahmed76/tmelliottjr/issues"
+    "url": "https://github.com/tmelliottjr/multer-gcs/issues"
   },
   "homepage": "https://github.com/tmelliottjr/multer-gcs#readme",
   "dependencies": {
