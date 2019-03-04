@@ -1,4 +1,4 @@
-const gcloud = require('google-cloud');
+const { Storage } = require('@google-cloud/storage');
 const crypto = require('crypto');
 const peek = require('buffer-peek-stream');
 const fileTypeCheck = require('file-type');
@@ -18,10 +18,9 @@ function preProcess(req, file, cb) {
 }
 
 function GCStorage(opts) {
-
   this.getMimeType = function(req, file) {
     const newFile = file;
-    return new Promise(((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       peek(file.stream, 4100, (err, data, outStream) => {
         if (err) reject(err);
 
@@ -36,36 +35,44 @@ function GCStorage(opts) {
 
         resolve(newFile);
       });
-    }));
-  }
+    });
+  };
 
-  this.getFilename = (opts.filename || getFilename);
+  this.getFilename = opts.filename || getFilename;
 
   if (typeof opts.destination === 'string') {
-    this.getDestination = function ($0, $1, cb) { cb(null, opts.destination); };
+    this.getDestination = function($0, $1, cb) {
+      cb(null, opts.destination);
+    };
   } else {
-    this.getDestination = (opts.destination || getDestination);
+    this.getDestination = opts.destination || getDestination;
   }
 
-  this.preProcess = (opts.preProcess || preProcess);
+  this.preProcess = opts.preProcess || preProcess;
 
-  opts.bucket = (opts.bucket || process.env.GCS_BUCKET || null);
+  opts.bucket = opts.bucket || process.env.GCS_BUCKET || null;
   opts.projectId = opts.projectId || process.env.GCLOUD_PROJECT || null;
   opts.keyFilename = opts.keyFilename || process.env.GCS_KEYFILE || null;
 
   if (!opts.bucket) {
-    throw new Error('You have to specify bucket for Google Cloud Storage to work.');
+    throw new Error(
+      'You have to specify bucket for Google Cloud Storage to work.',
+    );
   }
 
   if (!opts.projectId) {
-    throw new Error('You have to specify project id for Google Cloud Storage to work.');
+    throw new Error(
+      'You have to specify project id for Google Cloud Storage to work.',
+    );
   }
 
   if (!opts.keyFilename) {
-    throw new Error('You have to specify credentials key file for Google Cloud Storage to work.');
+    throw new Error(
+      'You have to specify credentials key file for Google Cloud Storage to work.',
+    );
   }
 
-  this.gcobj = gcloud.storage({
+  this.gcobj = new Storage({
     projectId: opts.projectId,
     keyFilename: opts.keyFilename,
   });
@@ -74,44 +81,51 @@ function GCStorage(opts) {
   this.options = opts;
 }
 
-GCStorage.prototype._handleFile = function (req, file, cb) {
+GCStorage.prototype._handleFile = function(req, file, cb) {
   const self = this;
 
-  self.getMimeType(req, file).then((file) => {
-    self.preProcess(req, file, (err) => {
-      if (err) {
-        return cb(err);
-      }
-
-      self.getDestination(req, file, (err, destination) => {
+  self
+    .getMimeType(req, file)
+    .then(file => {
+      self.preProcess(req, file, err => {
         if (err) {
           return cb(err);
         }
 
-        self.getFilename(req, file, (err, filename) => {
-          filename += file.extension ? `.${file.extension}` : '';
+        self.getDestination(req, file, (err, destination) => {
           if (err) {
             return cb(err);
           }
-          const gcFile = self.gcsBucket.file(filename);
-          const cwsOpts = {
-            predefinedAcl: self.options.acl || 'private',
-            metadata: {
-              contentType: file.mimetype,
-            },
-          };
 
-          file.outStream.pipe(gcFile.createWriteStream(cwsOpts))
-            .on('error', err => cb(err))
-            .on('finish', file => cb(null, {
-              path: `https://${self.options.bucket
-              }.storage.googleapis.com/${filename}`,
-              filename,
-            }));
+          self.getFilename(req, file, (err, filename) => {
+            filename += file.extension ? `.${file.extension}` : '';
+            if (err) {
+              return cb(err);
+            }
+            const gcFile = self.gcsBucket.file(filename);
+            const cwsOpts = {
+              predefinedAcl: self.options.acl || 'private',
+              metadata: {
+                contentType: file.mimetype,
+              },
+            };
+
+            file.outStream
+              .pipe(gcFile.createWriteStream(cwsOpts))
+              .on('error', err => cb(err))
+              .on('finish', file =>
+                cb(null, {
+                  path: `https://${
+                    self.options.bucket
+                  }.storage.googleapis.com/${filename}`,
+                  filename,
+                }),
+              );
+          });
         });
       });
-    });
-  }).catch(err => cb(err));
+    })
+    .catch(err => cb(err));
 };
 
 GCStorage.prototype._removeFile = function _removeFile(req, file, cb) {
@@ -119,6 +133,6 @@ GCStorage.prototype._removeFile = function _removeFile(req, file, cb) {
   gcFile.delete(cb);
 };
 
-module.exports = function (opts) {
+module.exports = function(opts) {
   return new GCStorage(opts);
 };

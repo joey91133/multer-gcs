@@ -5,7 +5,7 @@
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jahmed76/multer-gcs.git"
+    "url": "git+https://github.com/tmelliottjr/multer-gcs.git"
   },
   "keywords": [
     "multer",
@@ -15,13 +15,13 @@
   "author": "jahmed76",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/jahmed76/multer-gcs/issues"
+    "url": "https://github.com/jahmed76/tmelliottjr/issues"
   },
-  "homepage": "https://github.com/jahmed76/multer-gcs#readme",
+  "homepage": "https://github.com/tmelliottjr/multer-gcs#readme",
   "dependencies": {
+    "@google-cloud/storage": "^2.4.2",
     "buffer-peek-stream": "^1.0.1",
-    "file-type": "^6.1.0",
-    "google-cloud": "^0.56.0"
+    "file-type": "^6.2.0"
   },
   "devDependencies": {}
 }
